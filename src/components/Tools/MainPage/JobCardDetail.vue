@@ -1,0 +1,298 @@
+<template>
+  <div class="job-card-detail card-detail-style bg3">
+    <div class="job-title-and-actions">
+      <div style="display: flex;flex-direction: row">
+        <div class="job-title">{{ job.title }}</div>
+        <div class="job-salary">{{ job.salary }}</div>
+      </div>
+      <div class="actions-buttons">
+        <a-button
+          type="text"
+          class="button-style dislike-button-style"
+          :class="{ 'dislike-button-style-active': state.isDisliked }"
+          danger
+          @click="handleDislike"
+        >
+          {{ dislikeButtonText }}
+        </a-button>
+        <a-button
+          type="text"
+          class="button-style like-button-style"
+          :class="{ 'like-button-style-active': state.isLiked }"
+          @click="handleLike"
+        >
+          <template #icon><HeartOutlined /></template>
+          {{ likeButtonText }}
+        </a-button>
+        <a-button
+          type="text"
+          class="button-style submit-button-style"
+          :class="{ 'submit-button-style-active': state.isSubmitted }"
+          @click="handleSubmit"
+        >
+          <template #icon><SendOutlined /></template>
+          {{ submitButtonText }}
+        </a-button>
+      </div>
+    </div>
+    <div class="job-detail">
+      <a-tag :bordered="false" class="tags-style">{{ job.experience }}</a-tag>
+      <a-tag :bordered="false">{{ job.education }}</a-tag>
+    </div>
+    <div class="job-match-detail">
+      <span class="match-evaluation">胜任度评价：</span>
+      <span class="match-score">{{ job.matchScore }}</span>
+    </div>
+    <div style="height: 19rem; overflow-y: scroll; padding-bottom: 1rem">
+      <div class="job-description">职位描述：</div>
+      <div class="job-tags">
+        <a-tag
+          :bordered="false"
+          v-for="tag in job.tags"
+          :key="tag"
+          class="tags-style"
+        >{{ tag }}</a-tag
+        >
+      </div>
+      <div class="job-description-text">{{ job.description }}</div>
+      <div class="job-hr-detail">
+        <a-avatar :src="job.hrAvatar" />
+        <div class="hr-info">
+          <div style="display: flex; flex-direction: row">
+            <div class="hr-name">{{ job.hrName }}</div>
+            <div class="hr-position">{{ job.hrPosition }}</div>
+          </div>
+          <div class="job-company-and-location">
+            <span class="company">{{ job.company }}&nbsp;|&nbsp;</span>
+            <span class="location">{{ job.location }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { defineProps, ref, defineEmits, reactive, watch } from 'vue'
+import '../css/scrollBar.css'
+import '@/assets/global.css'
+import { HeartOutlined, SendOutlined } from '@ant-design/icons-vue'
+import { cloneDeep } from 'lodash'
+
+const props = defineProps({
+  job: {
+    type: Object,
+    required: true
+  }
+})
+
+const emit = defineEmits(['update:job'])
+
+const jobCopy = reactive(cloneDeep(props.job))
+
+const state = ref({
+  isLiked: false,
+  isDisliked: false,
+  isSubmitted: false
+})
+const likeButtonText = ref(state.value.isLiked ? '喜欢该岗位' : '喜欢')
+const dislikeButtonText = ref(state.value.isDisliked ? '不喜欢的岗位' : '不喜欢')
+const submitButtonText = ref(state.value.isSubmitted ? '已投递' : '投递简历')
+watch(
+  () => props.job,
+  (newJob) => {
+    console.log(`JobCardDetail: job changed, id: ${newJob.id}`)
+    state.value.isLiked = newJob.state.isLiked === '喜欢该岗位'
+    likeButtonText.value = state.value.isLiked ? '喜欢该岗位' : '喜欢'
+    state.value.isDisliked = newJob.state.isDisliked === '不喜欢的岗位'
+    dislikeButtonText.value = state.value.isDisliked ? '不喜欢的岗位' : '不喜欢'
+    state.value.isSubmitted = newJob.state.isSubmitted === '已投递'
+    submitButtonText.value = state.value.isSubmitted ? '已投递' : '投递简历'
+  },
+  { deep: true }
+)
+
+const handleLike = () => {
+  state.value.isLiked = !state.value.isLiked
+  console.log('MainPage:like:', state.value.isLiked)
+  jobCopy.state.isLiked = state.value.isLiked ? '喜欢该岗位' : '喜欢'
+  emit('update:job', jobCopy)
+  likeButtonText.value = state.value.isLiked ? '喜欢该岗位' : '喜欢'
+}
+
+const handleDislike = () => {
+  state.value.isDisliked = !state.value.isDisliked
+  console.log('MainPage:dislike:', state.value.isDisliked)
+  jobCopy.state.isDisliked = state.value.isDisliked ? '不喜欢的岗位' : '不喜欢'
+  emit('update:job', jobCopy)
+  dislikeButtonText.value = state.value.isDisliked ? '不喜欢的岗位' : '不喜欢'
+}
+
+const handleSubmit = () => {
+  state.value.isSubmitted = !state.value.isSubmitted
+  console.log('MainPage:submit:', state.value.isSubmitted)
+  jobCopy.state.isSubmitted = state.value.isSubmitted ? '已投递' : '投递简历'
+  emit('update:job', jobCopy)
+  submitButtonText.value = state.value.isSubmitted ? '已投递' : '投递简历'
+}
+</script>
+
+<style scoped >
+.job-card-detail {
+  width: 48rem;
+  height: 28rem;
+  padding: 1.25rem;
+  border-radius: 15px;
+  margin-bottom: 20px;
+}
+
+.job-title-and-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.job-title {
+  font-weight: bold;
+  color: var(--greyFontColor125);
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.job-salary {
+  font-weight: bold;
+  color: var(--sararyColor);
+  font-size: 1.1rem;
+  margin-left: 1.5rem;
+  margin-top: 0.1rem
+}
+
+.actions-buttons a-button {
+  margin-right: 1rem;
+}
+
+.job-detail, .job-match-detail, .job-hr-detail {
+  margin-top: 5px;
+}
+.job-match-detail {
+  width: 27%;
+  box-sizing:border-box;
+  background-color: var(--themeColor01);
+  padding: 0.5rem 1.25rem;
+  border-left: 4px var(--themeColor) solid;
+  margin-top: 1rem;
+  margin-bottom: 5px;
+  color: var(--themeColor);
+}
+
+.match-evaluation,
+.match-score {
+  color: var(--themeColor);
+}
+
+.job-tags{
+  margin-top:1rem;
+  margin-bottom:0;
+}
+
+.tags-style{
+  margin-right: 1rem;
+}
+
+.job-description{
+  font-size: 1.1rem;
+  margin-top: 1rem;
+}
+
+.job-description-text {
+  padding: 1rem;
+  font-size: 0.9rem;
+  color:var(--greyFontColor125);
+  white-space: pre-wrap;/*使其换行*/
+  line-height: 1.5;
+}
+
+.job-hr-detail {
+  display: flex;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.hr-info {
+  margin-left: 10px;
+}
+
+.hr-name {
+  font-weight: bold;
+}
+
+.hr-position{
+  margin-left: 1rem;
+  margin-top:0.1rem;
+  font-size: 0.9rem;
+}
+
+.job-company-and-location {
+  color: var(--greyFontColor125);
+  margin-top:0.1rem;
+  font-size: 0.9rem;
+}
+
+.location{
+}
+
+/*
+:deep(.ant-tag){
+  border-color: var(--themeColor);
+  color: var(--themeColor);
+  background: rgb(246, 250, 250,0.9);
+}
+*/
+
+:deep(.ant-btn){
+  padding: 0.2rem 0.5rem 0.2rem 0.5rem;
+}
+
+.button-style{
+  margin-left: 0.7rem;
+}
+.dislike-button-style{
+  border-color: var(--sararyColor);
+  color: var(--sararyColor);
+  background: var(--sararyColor0001);
+}
+.dislike-button-style:hover{
+  border-color: var(--sararyColor125);
+  color: var(--sararyColor125);
+  background: var(--sararyColor001);
+}
+.like-button-style{
+  border-color: var(--themeColor);
+  color: var(--themeColor);
+  background: var(--themeColor001);
+}
+.like-button-style:hover{
+  border-color: var(--themeColor);
+  color: var(--themeColor);
+  background: var(--themeColor01);
+}
+.submit-button-style{
+  background: var(--themeColor);
+  color: white;
+}
+.submit-button-style:hover{
+  background: var(--themeColor075);
+  color: white;
+}
+.dislike-button-style-active {
+  border-color: var(--sararyColor125);
+  color: var(--sararyColor125);
+  background: var(--sararyColor001);
+}
+
+.like-button-style-active {
+  border-color: var(--themeColor);
+  color: var(--themeColor);
+  background: var(--themeColor01);
+}
+</style>
